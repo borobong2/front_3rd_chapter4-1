@@ -7,33 +7,46 @@
 
 ## 배포 워크플로우 설명
 
-이 GitHub Actions 워크플로우는 코드 변경 사항이 `main` 브랜치에 대한 Pull Request가 닫힐 때 자동으로 실행되며, 수동으로도 트리거할 수 있습니다. 이 워크플로우는 Node.js 애플리케이션을 빌드하고, AWS S3에 배포하며, CloudFront 캐시를 무효화하는 과정을 포함합니다.
+- 이 GitHub Actions 워크플로우는 코드 변경 사항이 `main` 브랜치에 대한 Pull Request가 닫힐 때 자동으로 실행되며, 수동으로도 트리거할 수 있습니다. 
+- 이 워크플로우는 Node.js 애플리케이션을 빌드하고, AWS S3에 배포하며, CloudFront 캐시를 무효화하는 과정을 포함합니다.
 
 ### 주요 단계
+- 이 배포 워크플로우는 `Pull Request가 병합`된 경우에만 실행됩니다.
 
 1. **Checkout repository**:
-   - `actions/checkout@v2`를 사용하여 현재 저장소의 코드를 체크아웃합니다. 이 단계는 이후 단계에서 코드에 접근할 수 있도록 합니다.
+   - `actions/checkout@v2`를 사용하여 현재 저장소의 코드를 체크아웃합니다. 
+   - 이 단계는 이후 단계에서 코드에 접근할 수 있도록 합니다.
 
 2. **Setup Node.js**:
-   - `actions/setup-node@v2`를 사용하여 Node.js 환경을 설정합니다. 여기서는 Node.js 버전 18을 사용하도록 지정합니다.
+   - `actions/setup-node@v2`를 사용하여 Node.js 환경을 설정합니다. 
+   - 여기서는 Node.js 버전 18을 사용하도록 지정합니다.
 
-3. **Remove node_modules & package-lock.json**:
-   - 이전에 설치된 `node_modules`와 `package-lock.json` 파일을 제거하여 깨끗한 상태에서 패키지를 설치합니다.
+3. **Cache Node.js modules**:
+   - `actions/cache@v2`를 사용하여 Node.js 패키지를 캐시합니다. 
+   - 이를 통해 이전에 설치된 패키지를 재사용하여 설치 시간을 단축합니다. 
+   - 캐시는 `~/.npm` 경로에 저장되며, `package-lock.json` 파일의 해시를 기반으로 키가 생성됩니다.
 
 4. **Install packages**:
-   - `npm install --legacy-peer-deps` 명령을 실행하여 필요한 Node.js 패키지를 설치합니다. `--legacy-peer-deps` 플래그는 의존성 문제를 피하기 위해 사용됩니다.
+   - `npm ci` 명령을 실행하여 필요한 Node.js 패키지를 설치합니다. 
+   - 이 명령은 `package-lock.json`에 정의된 정확한 버전의 패키지를 설치합니다.
 
 5. **Build**:
-   - `unset CI` 명령을 통해 CI 환경 변수를 제거한 후, `npm run build`를 실행하여 애플리케이션을 빌드합니다. 이 단계에서 애플리케이션의 최종 결과물이 생성됩니다.
+   - `npm run build`를 실행하여 애플리케이션을 빌드합니다. 
+   - 이 단계에서 애플리케이션의 최종 결과물이 생성됩니다.
 
 6. **Configure AWS credentials**:
-   - `aws-actions/configure-aws-credentials@v1`를 사용하여 AWS 자격 증명을 설정합니다. 이 단계에서는 GitHub Secrets에 저장된 AWS 액세스 키와 비밀 키를 사용하여 AWS에 인증합니다.
+   - `aws-actions/configure-aws-credentials@v1`를 사용하여 AWS 자격 증명을 설정합니다. 
+   - 이 단계에서는 GitHub Secrets에 저장된 AWS 액세스 키와 비밀 키를 사용하여 AWS에 인증합니다.
 
 7. **Deploy to S3**:
-   - `jakejarvis/s3-sync-action@master`를 사용하여 빌드된 애플리케이션을 S3 버킷에 배포합니다. `--delete` 옵션을 사용하여 S3에 있는 기존 파일 중 빌드 결과에 포함되지 않은 파일을 삭제합니다. 이 단계에서 S3 버킷에 최신 애플리케이션 파일이 업로드됩니다.
+   - `jakejarvis/s3-sync-action@master`를 사용하여 빌드된 애플리케이션을 S3 버킷에 배포합니다.
+   - `--delete` 옵션을 사용하여 S3에 있는 기존 파일 중 빌드 결과에 포함되지 않은 파일을 삭제합니다. 
+   - 이 단계에서 S3 버킷에 최신 애플리케이션 파일이 업로드됩니다.
 
 8. **Invalidate CloudFront**:
-   - `chetan/invalidate-cloudfront-action@v2`를 사용하여 CloudFront 캐시를 무효화합니다. 이 단계에서는 모든 경로(`/*`)에 대해 캐시를 무효화하여 사용자에게 최신 콘텐츠가 제공되도록 합니다.
+   - `chetan/invalidate-cloudfront-action@v2`를 사용하여 CloudFront 캐시를 무효화합니다. 
+   - 이 단계에서는 모든 경로(`/*`)에 대해 캐시를 무효화하여 사용자에게 최신 콘텐츠가 제공되도록 합니다.
+
 
 ## 배포 링크
 - S3 링크: [http://hh-plus-chap4.s3-website.ap-northeast-2.amazonaws.com](http://hh-plus-chap4.s3-website.ap-northeast-2.amazonaws.com/)
