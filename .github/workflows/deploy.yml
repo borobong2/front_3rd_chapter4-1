@@ -9,6 +9,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+
 
     steps:
       - name: Checkout repository
@@ -19,19 +21,20 @@ jobs:
         with:
           node-version: "18"
 
-      # remove before node_modules & package-lock.json
-      - name: Remove node_modules & package-lock.json
-        run: |
-          rm -rf node_modules package-lock.json
+      - name: Cache Node.js modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
-      # Install packages
       - name: Install packages
         run: |
-          npm install --legacy-peer-deps
+          npm ci
 
       - name: Build
         run: |
-          unset CI
           npm run build
 
       - name: Configure AWS credentials
