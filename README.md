@@ -93,16 +93,11 @@
 | <img src="https://github.com/user-attachments/assets/84f3d3a5-16f7-4a06-a5aa-6df0d326d0f5" width="400" height="200" alt="S3 접근 성능 1"> | <img src="https://github.com/user-attachments/assets/772c495a-c759-4f89-b0d6-4b645d277506" width="400" height="200" alt="CloudFront 성능 1"> |
 | *S3 직접 접근 시 측정 결과 2* | *CloudFront 접근 시 측정 결과 2* |
 | <img src="https://github.com/user-attachments/assets/24c65632-8f12-47c7-9f56-caf95e7cf387" width="400" height="200" alt="S3 접근 성능 2"> | <img src="https://github.com/user-attachments/assets/b8080309-9798-4a53-bd4c-8c4ba221b6af" width="400" height="200" alt="CloudFront 성능 2"> |
+| *S3 (DOM, FCP, LCP)* | *CloudFront (DOM, FCP, LCP)* |
+| <img src="https://github.com/user-attachments/assets/ddc9707d-5494-452e-a138-85018bbb1426" width="400" height="200" alt="S3 (DOM, FCP, LCP)"> | <img src="https://github.com/user-attachments/assets/d1cf7874-5e3e-4a6b-aff8-032d765071ff" width="400" height="200" alt="CloudFront (DOM, FCP, LCP)"> |
 
-### 성능 비교 결과
-
-| 성능 지표            | S3 직접 접근 | CloudFront 접근 |
-|:-------------------|:------------:|:---------------:|
-| Load Time          | **681ms**    | **186ms**       |
-| DOMContentLoaded    | **451ms**    | **48ms**        |
-| Finish             | **729ms**    | **318ms**       |
-- CloudFront 접근 시 성능이 더 빠른 이유는 캐시 무효화 때문입니다.
 - CloudFront에서만 Content Encoding 기능이 적용되어 있습니다. 
+  - **Content-Encoding: br**: 이 헤더는 Brotli 압축 알고리즘을 사용하여 콘텐츠가 압축되었음을 나타냅니다.
   - 이 기능은 웹 콘텐츠를 압축하여 전송함으로써 데이터 전송량을 줄이고, 페이지 로딩 속도를 개선하는 데 도움을 줍니다. 
 - **X-Cache: Hit from CloudFront**: 이 헤더는 요청된 콘텐츠가 CloudFront의 캐시에서 제공되었음을 나타냅니다. 
   - **캐시 히트**: 캐시에서 제공된 경우, 응답 속도가 빨라지고 원본 서버의 부하가 줄어듭니다. 
@@ -110,12 +105,33 @@
   - **캐시 미스**: 반대로, 만약 `X-Cache` 헤더가 `Miss from CloudFront`로 표시된다면, 요청된 리소스가 캐시에 없어서 원본 서버에서 직접 가져왔음을 의미합니다. 
     - 이 경우 응답 속도가 느려질 수 있습니다.
 
+### 성능 비교 결과
+
+#### Network 탭 성능
+
+| 성능 지표            | S3 직접 접근 | CloudFront 접근 |
+|:-------------------|:------------:|:---------------:|
+| **Load Time**          | **681ms**    | **186ms**       |
+| **DOMContentLoaded (network)**    | **451ms**    | **48ms**        |
+| **Finish**             | **729ms**    | **318ms**       |
+
+---
+
+#### Performance Insight
+
+| 성능 지표            | S3 직접 접근 | CloudFront 접근 |
+|:-------------------|:------------:|:---------------:|
+| **DOMContentLoaded (insight)** | **140ms**    | **50ms**       |
+| **First Contentful Paint (FCP)** | **200ms**    | **80ms**       |
+| **Largest Contentful Paint (LCP)** | **200ms**    | **90ms**       |
+
 
 <small>
  *Load Time: 사용자가 페이지를 요청한 시점부터 모든 리소스가 완전히 로드되어 사용자에게 표시될 때까지 걸린 총 시간입니다.<br/>
  *DOMContentLoaded: HTML 문서가 완전히 로드되고 파싱이 완료된 시점입니다.<br/>
  *Finish: 모든 요청이 완료된 시점입니다.<br/>
- **Content-Encoding: br**: 이 헤더는 Brotli 압축 알고리즘을 사용하여 콘텐츠가 압축되었음을 나타냅니다.
+ *FCP: 첫 번째 콘텐츠가 화면에 표시된 시점입니다.<br/>
+ *LCP: 가장 큰 콘텐츠가 화면에 표시된 시점입니다.<br/>
 </small>
 
 ### CloudFront 주요 이점
@@ -126,5 +142,5 @@
 
 ---
 <small>
-*참고: 성능 측정은 Chrome DevTools의 Network 탭을 사용하여 측정되었습니다.*
+*참고: 성능 측정은 Chrome DevTools의 Network 탭을 사용하여 측정되었습니다.
 </small>
