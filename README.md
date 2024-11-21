@@ -14,37 +14,33 @@
 - 이 배포 워크플로우는 `Pull Request가 병합`된 경우에만 실행됩니다.
 
 1. **Checkout repository**:
-   - `actions/checkout@v2`를 사용하여 현재 저장소의 코드를 체크아웃합니다. 
+   - `actions/checkout@v4`를 사용하여 현재 저장소의 코드를 체크아웃합니다. 
    - 이 단계는 이후 단계에서 코드에 접근할 수 있도록 합니다.
 
 2. **Setup Node.js**:
-   - `actions/setup-node@v2`를 사용하여 Node.js 환경을 설정합니다. 
-   - 여기서는 Node.js 버전 20을 사용하도록 지정합니다.
+   - `actions/setup-node@v4`를 사용하여 Node.js 환경을 설정합니다. 
+   - Node.js 버전 20을 사용하며, npm 패키지 캐싱을 자동으로 처리합니다.
+   - `cache: 'npm'` 옵션을 통해 패키지 설치 시간을 단축합니다.
 
-3. **Cache Node.js modules**:
-   - `actions/cache@v2`를 사용하여 Node.js 패키지를 캐시합니다. 
-   - 이를 통해 이전에 설치된 패키지를 재사용하여 설치 시간을 단축합니다. 
-   - 캐시는 `~/.npm` 경로에 저장되며, `package-lock.json` 파일의 해시를 기반으로 키가 생성됩니다.
-
-4. **Install packages**:
+3. **Install packages**:
    - `npm ci` 명령을 실행하여 필요한 Node.js 패키지를 설치합니다. 
    - 이 명령은 `package-lock.json`에 정의된 정확한 버전의 패키지를 설치합니다.
 
-5. **Build**:
+4. **Build**:
    - `npm run build`를 실행하여 애플리케이션을 빌드합니다. 
    - 이 단계에서 애플리케이션의 최종 결과물이 생성됩니다.
 
-6. **Configure AWS credentials**:
-   - `aws-actions/configure-aws-credentials@v1`를 사용하여 AWS 자격 증명을 설정합니다. 
+5. **Configure AWS credentials**:
+   - `aws-actions/configure-aws-credentials@v4`를 사용하여 AWS 자격 증명을 설정합니다. 
    - 이 단계에서는 GitHub Secrets에 저장된 AWS 액세스 키와 비밀 키를 사용하여 AWS에 인증합니다.
 
-7. **Deploy to S3**:
-   - `jakejarvis/s3-sync-action@master`를 사용하여 빌드된 애플리케이션을 S3 버킷에 배포합니다.
+6. **Deploy to S3**:
+   - AWS CLI의 `s3 sync` 명령어를 사용하여 빌드된 애플리케이션을 S3 버킷에 배포합니다.
    - `--delete` 옵션을 사용하여 S3에 있는 기존 파일 중 빌드 결과에 포함되지 않은 파일을 삭제합니다. 
    - 이 단계에서 S3 버킷에 최신 애플리케이션 파일이 업로드됩니다.
 
-8. **Invalidate CloudFront**:
-   - `chetan/invalidate-cloudfront-action@v2`를 사용하여 CloudFront 캐시를 무효화합니다. 
+7. **Invalidate CloudFront**:
+   - AWS CLI의 `cloudfront create-invalidation` 명령어를 사용하여 CloudFront 캐시를 무효화합니다. 
    - 이 단계에서는 모든 경로(`/*`)에 대해 캐시를 무효화하여 사용자에게 최신 콘텐츠가 제공되도록 합니다.
 
 ## 배포 링크 및 환경
